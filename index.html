@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROGERS DVD Bounce</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #111;
+    font-family: 'Arial Black', Arial, sans-serif;
+    height: 100vh;
+    position: relative;
+  }
+
+  #rogers {
+    position: absolute;
+    font-size: 8vw; /* responsive */
+    font-weight: bold;
+    color: #00ffcc;
+    cursor: pointer;
+    user-select: none;
+    text-decoration: underline thick #00ffcc;
+    text-shadow: 3px 3px 0 #0ff, 6px 6px 0 #00aabb; /* 3D illusion */
+    transform-style: preserve-3d;
+  }
+
+  .popup {
+    position: absolute;
+    font-size: 3vw; /* responsive popup */
+    font-weight: bold;
+    color: yellow;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 1s ease-out, transform 1s ease-out;
+    text-shadow: 1px 1px 2px black;
+  }
+</style>
+</head>
+<body>
+
+<div id="rogers">ROGERS</div>
+
+<script>
+const rogers = document.getElementById('rogers');
+let dx = 3;
+let dy = 3;
+let bouncing = false;
+
+// Start in center after element renders
+let x = (window.innerWidth - rogers.offsetWidth) / 2;
+let y = (window.innerHeight - rogers.offsetHeight) / 2;
+rogers.style.left = x + 'px';
+rogers.style.top = y + 'px';
+
+// Phrases
+const phrases = [
+  "Wheres my Muscle Milk!",
+  "I am the edible inspector",
+  "I love wholesale",
+  "No pizza",
+  "Its LULULEMON",
+  "Go Celtics",
+  "At Showcase...",
+  "Yes I meal prep!",
+  "Back to the kitchen",
+  "*burps*"
+];
+
+// Random color
+function getRandomColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) color += letters[Math.floor(Math.random() * 16)];
+  return color;
+}
+
+// Show popup
+function showPopup(text, px, py) {
+  const popup = document.createElement('div');
+  popup.className = 'popup';
+  popup.textContent = text;
+  popup.style.left = px + 'px';
+  popup.style.top = py + 'px';
+  document.body.appendChild(popup);
+
+  requestAnimationFrame(() => {
+    popup.style.transform = 'translateY(-50px)';
+    popup.style.opacity = '0';
+  });
+
+  setTimeout(() => popup.remove(), 1000);
+}
+
+// Change direction & color on click
+rogers.addEventListener('click', () => {
+  dx = -dx + (Math.random() - 0.5) * 2; // add random small change
+  dy = -dy + (Math.random() - 0.5) * 2;
+  rogers.style.color = getRandomColor();
+  if (!bouncing) {
+    bouncing = true;
+    animate();
+  }
+});
+
+function animate() {
+  if (!bouncing) return;
+
+  x += dx;
+  y += dy;
+
+  let hitWall = false;
+
+  // Desktop/mobile bounds
+  if (x + rogers.offsetWidth > window.innerWidth) {
+    dx = -Math.abs(dx); hitWall = true;
+  }
+  if (x < 0) {
+    dx = Math.abs(dx); hitWall = true;
+  }
+  if (y + rogers.offsetHeight > window.innerHeight) {
+    dy = -Math.abs(dy); hitWall = true;
+  }
+  if (y < 0) {
+    dy = Math.abs(dy); hitWall = true;
+  }
+
+  if (hitWall) {
+    rogers.style.color = getRandomColor();
+    const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+    showPopup(phrase, x + rogers.offsetWidth / 2, y);
+  }
+
+  rogers.style.left = x + 'px';
+  rogers.style.top = y + 'px';
+
+  requestAnimationFrame(animate);
+}
+
+// Keep in bounds on resize
+window.addEventListener('resize', () => {
+  x = Math.min(x, window.innerWidth - rogers.offsetWidth);
+  y = Math.min(y, window.innerHeight - rogers.offsetHeight);
+});
+
+</script>
+</body>
+</html>

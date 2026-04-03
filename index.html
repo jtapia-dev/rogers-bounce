@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROGERS DVD Bounce</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #111;
+    font-family: 'Arial Black', Arial, sans-serif;
+    height: 100vh;
+    position: relative;
+  }
+
+  #rogers {
+    position: absolute;
+    font-size: 8vw; /* responsive */
+    font-weight: bold;
+    color: #00ffcc;
+    cursor: pointer;
+    user-select: none;
+    text-decoration: underline thick #00ffcc;
+    text-shadow: 3px 3px 0 #0ff, 6px 6px 0 #00aabb; /* 3D illusion */
+    transform-style: preserve-3d;
+  }
+
+  .popup {
+    position: absolute;
+    font-size: 3vw; /* responsive popup */
+    font-weight: bold;
+    color: yellow;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 1s ease-out, transform 1s ease-out;
+    text-shadow: 1px 1px 2px black;
+  }
+
+  #fullscreenBtn {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 10px 15px;
+    background-color: #00ffcc;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1000;
+    border-radius: 5px;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<button id="fullscreenBtn">Fullscreen</button>
+<div id="rogers">ROGERS</div>
+
+<script>
+const rogers = document.getElementById('rogers');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+let dx = 3, dy = 3;
+let bouncing = false;
+let isFullscreen = false;
+
+// Start centered
+let x = (window.innerWidth - rogers.offsetWidth) / 2;
+let y = (window.innerHeight - rogers.offsetHeight) / 2;
+rogers.style.left = x + 'px';
+rogers.style.top = y + 'px';
+
+// Random phrases
+const phrases = [
+  "Wheres my Muscle Milk!",
+  "I am the edible inspector",
+  "I love wholesale",
+  "No pizza",
+  "Its LULULEMON",
+  "Go Celtics",
+  "At Showcase...",
+  "Yes I meal prep!",
+  "Back to the kitchen",
+  "*burps*",
+  "Babe wheres my creatine? (5:15 AM)",
+  "I love Papa Ginos",
+  "Bar Mitzvah TIMEEE",
+  "Hear about Bronny??",
+  "Lion King was so good",
+  "Check out this new NF"
+];
+
+// Random color
+function getRandomColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) color += letters[Math.floor(Math.random() * 16)];
+  return color;
+}
+
+// Popup
+function showPopup(text, px, py) {
+  const popup = document.createElement('div');
+  popup.className = 'popup';
+  popup.textContent = text;
+  popup.style.left = px + 'px';
+  popup.style.top = py + 'px';
+  document.body.appendChild(popup);
+
+  requestAnimationFrame(() => {
+    popup.style.transform = 'translateY(-50px)';
+    popup.style.opacity = '0';
+  });
+
+  setTimeout(() => popup.remove(), 1000);
+}
+
+// Toggle fullscreen
+fullscreenBtn.addEventListener('click', () => {
+  if (!isFullscreen) {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+    } else if (document.documentElement.webkitRequestFullscreen) {
+      document.documentElement.webkitRequestFullscreen();
+    } else if (document.documentElement.msRequestFullscreen) {
+      document.documentElement.msRequestFullscreen();
+    }
+    isFullscreen = true;
+    fullscreenBtn.textContent = "Exit Fullscreen";
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen();
+    }
+    isFullscreen = false;
+    fullscreenBtn.textContent = "Fullscreen";
+  }
+});
+
+// Change direction & color on click
+rogers.addEventListener('click', () => {
+  dx = -dx + (Math.random() - 0.5) * 2;
+  dy = -dy + (Math.random() - 0.5) * 2;
+  rogers.style.color = getRandomColor();
+  if (!bouncing) {
+    bouncing = true;
+    animate();
+  }
+});
+
+function animate() {
+  if (!bouncing) return;
+
+  x += dx;
+  y += dy;
+
+  let hitWall = false;
+
+  if (x + rogers.offsetWidth > window.innerWidth) { dx = -Math.abs(dx); hitWall = true; }
+  if (x < 0) { dx = Math.abs(dx); hitWall = true; }
+  if (y + rogers.offsetHeight > window.innerHeight) { dy = -Math.abs(dy); hitWall = true; }
+  if (y < 0) { dy = Math.abs(dy); hitWall = true; }
+
+  if (hitWall) {
+    rogers.style.color = getRandomColor();
+    const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+    showPopup(phrase, x + rogers.offsetWidth / 2, y);
+  }
+
+  rogers.style.left = x + 'px';
+  rogers.style.top = y + 'px';
+
+  requestAnimationFrame(animate);
+}
+
+// Keep in bounds on resize
+window.addEventListener('resize', () => {
+  x = Math.min(x, window.innerWidth - rogers.offsetWidth);
+  y = Math.min(y, window.innerHeight - rogers.offsetHeight);
+});
+
+</script>
+
+</body>
+</html>

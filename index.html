@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROGERS DVD Bounce</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #111;
+    font-family: 'Orbitron', sans-serif;
+    height: 100vh;
+    position: relative;
+  }
+
+  #rogers {
+    position: absolute;
+    font-size: 8vw;
+    font-weight: 700;
+    color: #00ffcc;
+    cursor: pointer;
+    user-select: none;
+    text-shadow: 2px 2px 0 #0ff, 4px 4px 0 #00aabb;
+  }
+
+  #underline {
+    position: absolute;
+    height: 8px;
+    background-color: #00ffcc;
+    border-radius: 2px;
+  }
+
+  .popup {
+    position: absolute;
+    font-size: 3vw;
+    font-weight: bold;
+    color: yellow;
+    pointer-events: none;
+    opacity: 1;
+    text-shadow: 1px 1px 2px black;
+    transition: opacity 2.8s ease-out, transform 2.8s ease-out;
+  }
+
+  .floating-img {
+    position: absolute;
+    pointer-events: none;
+    z-index: 999;
+    background-color: #111; /* matches page background */
+    will-change: transform, opacity;
+  }
+
+  #fullscreenBtn {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 10px 15px;
+    background-color: #00ffcc;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1000;
+    border-radius: 5px;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<button id="fullscreenBtn">Fullscreen</button>
+<div id="rogers">ROGERS</div>
+<div id="underline"></div>
+
+<audio id="heroAudio" src="HERO.mp3" preload="auto"></audio>
+
+<script>
+const rogers = document.getElementById('rogers');
+const underline = document.getElementById('underline');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const heroAudio = document.getElementById('heroAudio');
+
+let dx = (Math.random() * 2 + 1) * (Math.random() < 0.5 ? 1 : -1);
+let dy = (Math.random() * 2 + 1) * (Math.random() < 0.5 ? 1 : -1);
+let bouncing = true;
+let isFullscreen = false;
+
+const AUDIO_START = 7;
+const AUDIO_END = 10;
+let audioTimeout = null;
+
+const events = [
+  { text: "Wheres my Muscle Milk!", img: "muscle.png" },
+  { text: "I am the edible inspector", img: null },
+  { text: "I love wholesale", img: "wholesale.png" },
+  { text: "No pizza", img: "nopizza.png" },
+  { text: "Its LULULEMON", img: "lulu.png" },
+  { text: "Go Celtics", img: "celt.png" },
+  { text: "At Showcase...", img: "showcase.png" },
+  { text: "Yes I meal prep!", img: "mealprep.png" },
+  { text: "Back to the kitchen", img: "kitchen.png" },
+  { text: "*burps*", img: null },
+  { text: "Babe wheres my creatine? (5:15 AM)", img: "creatine.png" },
+  { text: "I love Papa Ginos", img: "PG.png" },
+  { text: "Bar Mitzvah TIMEEE", img: null }
+];
+
+function getRandomColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) color += letters[Math.floor(Math.random() * 16)];
+  return color;
+}
+
+function playHeroSnippet() {
+  heroAudio.currentTime = AUDIO_START;
+  heroAudio.play();
+  clearTimeout(audioTimeout);
+  audioTimeout = setTimeout(() => heroAudio.pause(), (AUDIO_END - AUDIO_START) * 1000);
+}
+
+// Popup text
+function showPopup(text, px, py, avoidRect) {
+  const popup = document.createElement('div');
+  popup.className = 'popup';
+  popup.textContent = text;
+
+  const popupWidth = window.innerWidth * 0.3;
+  const popupHeight = window.innerHeight * 0.05;
+
+  // Ensure popup stays on-screen and avoids overlap with Rogers
+  let left = Math.min(Math.max(px - popupWidth / 2, 5), window.innerWidth - popupWidth - 5);
+  let top = Math.min(Math.max(py - popupHeight - 40, 5), window.innerHeight - popupHeight - 5);
+
+  if (avoidRect) {
+    // Shift if overlapping with Rogers
+    if (top < avoidRect.top + avoidRect.height + 5) {
+      top = avoidRect.top + avoidRect.height + 5;
+    }
+  }
+
+  popup.style.left = left + 'px';
+  popup.style.top = top + 'px';
+  document.body.appendChild(popup);
+
+  requestAnimationFrame(() => {
+    popup.style.opacity = 0;
+    popup.style.transform = `translateY(-60px)`;
+  });
+
+  setTimeout(() => popup.remove(), 2800);
+}
+
+// Floating images with shake/rotation
+function showImage(src, px, py, avoidRect) {
+  if (!src) return;
+
+  const img = document.createElement('img');
+  img.src = src;
+  img.className = 'floating-img';
+
+  const size = 80 + Math.random() * 80;
+
+  let left = Math.min(Math.max(px - size / 2, 5), window.innerWidth - size - 5);
+  let top = Math.min(Math.max(py - size / 2, 5), window.innerHeight - size - 5);
+
+  if (avoidRect) {
+    if (top < avoidRect.top + avoidRect.height + 5) {
+      top = avoidRect.top + avoidRect.height + 5;
+    }
+  }
+
+  img.style.left = left + 'px';
+  img.style.top = top + 'px';
+  img.style.width = size + 'px';
+  img.style.height = 'auto';
+  img.style.opacity = 0;
+  img.style.transform = `scale(0.8) rotate(${Math.random()*40-20}deg)`;
+  img.style.transition = 'transform 0.8s ease, opacity 0.8s ease';
+  img.style.backgroundColor = '#111';
+
+  document.body.appendChild(img);
+
+  requestAnimationFrame(() => {
+    img.style.opacity = 1;
+    img.style.transform = `scale(1.05) translateY(-20px) rotate(${Math.random()*20-10}deg)`;
+  });
+
+  const shakeInterval = setInterval(() => {
+    img.style.transform = `scale(1.05) translate(${Math.random()*6-3}px, ${-20+Math.random()*4-2}px) rotate(${Math.random()*20-10}deg)`;
+  }, 50);
+
+  setTimeout(() => {
+    clearInterval(shakeInterval);
+    img.style.opacity = 0;
+    img.style.transform = `scale(0.9) translateY(-50px) rotate(${Math.random()*20-10}deg)`;
+  }, 1500);
+
+  setTimeout(() => img.remove(), 2000);
+}
+
+// Start center
+let x = (window.innerWidth - rogers.offsetWidth) / 2;
+let y = (window.innerHeight - rogers.offsetHeight) / 2;
+
+function updatePositions() {
+  rogers.style.left = x + 'px';
+  rogers.style.top = y + 'px';
+  underline.style.left = x + 'px';
+  underline.style.top = (y + rogers.offsetHeight + 5) + 'px';
+  underline.style.width = rogers.offsetWidth + 'px';
+}
+
+updatePositions();
+
+// Fullscreen
+fullscreenBtn.addEventListener('click', () => {
+  if (!isFullscreen) {
+    document.documentElement.requestFullscreen();
+    isFullscreen = true;
+    fullscreenBtn.textContent = "Exit Fullscreen";
+  } else {
+    document.exitFullscreen();
+    isFullscreen = false;
+    fullscreenBtn.textContent = "Fullscreen";
+  }
+});
+
+// Click to change direction, color, audio
+rogers.addEventListener('click', () => {
+  dx = -dx + (Math.random() - 0.5) * 1.5;
+  dy = -dy + (Math.random() - 0.5) * 1.5;
+  const newColor = getRandomColor();
+  rogers.style.color = newColor;
+  underline.style.backgroundColor = newColor;
+  playHeroSnippet();
+});
+
+// Animate bouncing
+function animate() {
+  if (!bouncing) return;
+
+  x += dx;
+  y += dy;
+
+  let hitWall = false;
+  if (x + rogers.offsetWidth > window.innerWidth) { dx = -Math.abs(dx); hitWall = true; }
+  if (x < 0) { dx = Math.abs(dx); hitWall = true; }
+  if (y + rogers.offsetHeight > window.innerHeight) { dy = -Math.abs(dy); hitWall = true; }
+  if (y < 0) { dy = Math.abs(dy); hitWall = true; }
+
+  if (hitWall) {
+    const newColor = getRandomColor();
+    rogers.style.color = newColor;
+    underline.style.backgroundColor = newColor;
+
+    const event = events[Math.floor(Math.random() * events.length)];
+    const quoteX = x + rogers.offsetWidth / 2;
+    const quoteY = y - rogers.offsetHeight / 2;
+
+    const rogersRect = rogers.getBoundingClientRect();
+    showPopup(event.text, quoteX, quoteY, rogersRect);
+    showImage(event.img, quoteX, quoteY, rogersRect);
+
+    if ((x <= 0 || x + rogers.offsetWidth >= window.innerWidth) &&
+        (y <= 0 || y + rogers.offsetHeight >= window.innerHeight)) {
+      playHeroSnippet();
+    }
+  }
+
+  updatePositions();
+  requestAnimationFrame(animate);
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+  x = Math.min(x, window.innerWidth - rogers.offsetWidth);
+  y = Math.min(y, window.innerHeight - rogers.offsetHeight);
+  updatePositions();
+});
+</script>
+
+</body>
+</html>
